@@ -188,7 +188,8 @@ var PercentItemAI = defineObject(BaseItemAI,
 	_getValue: function(unit, combination) {
 		var plus = Calculator.calculatePercentItemPlus(unit, combination.targetUnit, combination.item);
 		var Health = Math.round(RealBonus.getMhp(combination.targetUnit) * (combination.item.custom.Heal / 100))
-		return Calculator.calculateRecoveryValue(combination.targetUnit, Health, recoveryInfo.getRecoveryType(), plus);
+		var recoveryInfo = combination.item.getRecoveryInfo();
+		return Calculator.calculateRecoveryValue(combination.targetUnit, Health, RecoveryType.SPECIFY, plus);
 	},
 	
 	_getScore: function(unit, combination) {
