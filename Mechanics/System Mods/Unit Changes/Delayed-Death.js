@@ -1,3 +1,19 @@
+//Welcome to the Delayed Death script! This script will enable
+//the creation of a state that causes Player and Ally units to
+//be "dying" for a few turns before actually perishing.
+//In order to set this up, create a state with the following
+//custom parameter:
+//{Death:true}
+//It will not, by default, affect enemy units, but they can be
+//specially marked with this custom parameter:
+//{RS_Delayed:true}
+//and they will then receive the plugin's benefits.
+//State-curing items work to "Revive", and will restore 10% of the
+//target's health. Just set them to the desired range and target the
+//state you set up. Please enjoy the plugin!
+
+//-Lady Rena, May 29th, 2020.
+
 DamageEraseFlowEntry._doAction = function(damageData) {
 	var targetUnit = damageData.targetUnit;
 	var state, i;
@@ -12,7 +28,7 @@ DamageEraseFlowEntry._doAction = function(damageData) {
 	}
 	else {
 		targetUnit.setHp(0);
-		if (targetUnit.getUnitType() !== UnitType.ENEMY){
+		if (targetUnit.getUnitType() !== UnitType.ENEMY || unit.custom.RS_Delayed){
 			StateControl.arrangeState(targetUnit,state,IncreaseType.INCREASE)
 		}
 		else{
@@ -23,38 +39,7 @@ DamageEraseFlowEntry._doAction = function(damageData) {
 	}
 };
 
-StateRecoveryItemUse.mainAction = function() {
-	var i, count, list, state, arr;
-	var itemTargetInfo = this._itemUseParent.getItemTargetInfo();
-	var info = itemTargetInfo.item.getStateRecoveryInfo();
-	var unit = itemTargetInfo.targetUnit;
-	var stateGroup = info.getStateGroup();
-	
-	if (stateGroup.isAllBadState()) {
-		arr = [];
-		list = unit.getTurnStateList();
-		count = list.getCount();
-		for (i = 0; i < count; i++) {
-			state = list.getData(i).getState();
-			if (state.isBadState()) {
-				arr.push(state);	
-			}
-		}
-		
-		count = arr.length;
-		for (i = 0; i < count; i++) {
-			StateControl.arrangeState(unit, arr[i], IncreaseType.DECREASE);
-		}
-	}
-	else {
-		list = stateGroup.getStateReferenceList();
-		count = list.getTypeCount();
-		for (i = 0; i < count; i++) {
-			state = list.getTypeData(i);
-			StateControl.arrangeState(unit, state, IncreaseType.DECREASE);
-		}
-	}
-};
+var RSDelayDeath1 = StateControl.arrangeState;
 StateControl.arrangeState = function(unit, state, increaseType) {
 	var turnState = null;
 	var list = unit.getTurnStateList();
@@ -62,16 +47,7 @@ StateControl.arrangeState = function(unit, state, increaseType) {
 	var editor = root.getDataEditor();
 	
 	if (increaseType === IncreaseType.INCREASE) {
-		turnState = this.getTurnState(unit, state);
-		if (turnState !== null) {
-			// If the state has already been added, update the turn number.
-			turnState.setTurn(state.getTurn());
-		}
-		else {
-			if (count < DataConfig.getMaxStateCount()) {
-				turnState = editor.addTurnStateData(list, state);
-			}
-		}
+		RSDelayDeath1.call(this, unit, state, increaseType)
 	}
 	else if (increaseType === IncreaseType.DECREASE) {
 		if (state.custom.Death){
@@ -79,8 +55,11 @@ StateControl.arrangeState = function(unit, state, increaseType) {
 			var Dynamo = generator.acquireEventGenerator();
 			Dynamo.hpRecovery(unit,root.queryAnime('easyrecovery'),Math.ceil(ParamBonus.getMhp(unit)*0.1),RecoveryType.SPECIFY,true);
 			generator.executeDynamicEvent();
+			editor.deleteTurnStateData(list, state);
 		}
-		editor.deleteTurnStateData(list, state);
+		else{
+			RSDelayDeath1.call(this, unit, state, increaseType)
+		}
 	}
 	else if (increaseType === IncreaseType.ALLRELEASE) {
 		editor.deleteAllTurnStateData(list);
@@ -90,6 +69,7 @@ StateControl.arrangeState = function(unit, state, increaseType) {
 	
 	return turnState;
 };
+var RSDelayDeath2 = DamageEraseFlowEntry.enterFlowEntry
 DamageEraseFlowEntry.enterFlowEntry = function(damageData) {
 	this._damageData = damageData;
 	var i, state;
@@ -99,25 +79,14 @@ DamageEraseFlowEntry.enterFlowEntry = function(damageData) {
 			state = stateList.getData(i);
 		}
 	}
-	
-	if (damageData.isHit) {
-		this._doAction(damageData);
-	}
-	
-	if (this.isFlowSkip() || damageData.curHp > 0) {
-		return EnterResult.NOTENTER;
-	}
-	
 	if (StateControl.getTurnState(damageData.targetUnit,state)){
 		this._damageData.targetUnit.setInvisible(false);
+		this._eraseCounter = createObject(EraseCounter);
+		return EnterResult.OK;
 	}
 	else{
-		this._damageData.targetUnit.setInvisible(true);
+		return RSDelayDeath2.call(this, damageData)
 	}
-	
-	this._eraseCounter = createObject(EraseCounter);
-	
-	return EnterResult.OK;
 };
 
 DamageEraseFlowEntry.killUnit = function(unit){
@@ -152,7 +121,7 @@ StateControl.decreaseTurn = function(list) {
 		count2 = arr.length;
 		for (j = 0; j < count2; j++) {
 			this.arrangeState(unit, arr[j], IncreaseType.DECREASE);
-			if (arr[j].getName() === "Dying"){
+			if (arr[j].custom.Death){
 				DamageEraseFlowEntry.killUnit(unit);
 			}
 		}
@@ -176,7 +145,7 @@ DamageControl.checkHp = function(active, passive) {
 		// For isLosted which will be called later, hp doesn't become 1 at this moment.
 		this.setCatchState(passive, false);
 	}
-	if (passive.getUnitType() !== UnitType.ENEMY){
+	if (passive.getUnitType() !== UnitType.ENEMY || unit.custom.RS_Delayed){
 		StateControl.arrangeState(passive,state,IncreaseType.INCREASE)
 	}
 	else {
@@ -184,59 +153,16 @@ DamageControl.checkHp = function(active, passive) {
 	}
 };
 
-BaseCombinationCollector._setUnitRangeCombination = function(misc, filter, rangeMetrics) {
-	var i, j, indexArray, list, targetUnit, targetCount, score, combination, aggregation;
-	var unit = misc.unit;
-	var filterNew = this._arrangeFilter(unit, filter);
-	var listArray = this._getTargetListArray(filterNew, misc);
-	var listCount = listArray.length;
-	
-	if (misc.item !== null && !misc.item.isWeapon()) {
-		aggregation = misc.item.getTargetAggregation();
-	}
-	else if (misc.skill !== null) {
-		aggregation = misc.skill.getTargetAggregation();
-	}
-	else {
-		aggregation = null;
-	}
-	
-	for (i = 0; i < listCount; i++) {
-		list = listArray[i];
-		targetCount = list.getCount();
-		for (j = 0; j < targetCount; j++) {
-			targetUnit = list.getData(j);
-			if (targetUnit.getHp() === 0){
-				continue;
-			}
-			if (unit === targetUnit) {
-				continue;
-			}
-			
-			if (aggregation !== null && !aggregation.isCondition(targetUnit)) {
-				continue;
-			}
-			
-			score = this._checkTargetScore(unit, targetUnit);
-			if (score < 0) {
-				continue;
-			}
-			
-			// Calculate a series of ranges based on the current position of targetUnit (not myself, but the opponent).
-			indexArray = IndexArray.createRangeIndexArray(targetUnit.getMapX(), targetUnit.getMapY(), rangeMetrics);
-			
-			misc.targetUnit = targetUnit;
-			misc.indexArray = indexArray;
-			misc.rangeMetrics = rangeMetrics;
-			
-			// Get an array to store the position to move from a series of ranges.
-			misc.costArray = this._createCostArray(misc);
-			
-			if (misc.costArray.length !== 0) {
-				// There is a movable position, so create a combination.
-				combination = this._createAndPushCombination(misc);
-				combination.plusScore = score;
-			}
+var RSDelayDeath0 = BaseCombinationCollector._checkTargetScore;
+BaseCombinationCollector._checkTargetScore = function(unit, targetUnit) {
+	var Score = RSDelayDeath0.call(this, unit, targetUnit);
+	var i;
+	var list = targetUnit.getTurnStateList()
+	var count = list.getCount()
+	for (i = 0; i < count; i++){
+		if (list.getData(i).getState().custom.Death){
+			return -1;
 		}
 	}
+	return Score;
 };

@@ -1,3 +1,12 @@
+/*
+To use this script, set a global parameter
+equal to a website as a string. It will add a
+title command that opens the webpage when
+selected.
+
+Enjoy the script!
+-Lady Rena
+*/
 TitleCommand.WebPage = defineObject(BaseTitleCommand,
 {
 	openCommand: function() {
