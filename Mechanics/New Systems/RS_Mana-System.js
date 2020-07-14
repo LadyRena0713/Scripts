@@ -9,34 +9,37 @@ This window will feature some VERY barebones Mana information. It will be expand
 
 Currently, you must set custom parameters on each object, as below, to use the plugin:
 
--Units:
+-Units & Classes:
 --Max: The maximum Mana a unit has. Default is 100.
 --Cap: The maximum "Maximum Mana" a unit can ever have. Default is 300.
 --Regen: How much they gain each turn. Default is 20% of max.
----The first is a string, RAW or PERCENT, that determine how to add the mana.
----The second is how much mana to add.
----If it's RAW, it adds the mana as a whole number.
----If it's PERCENT, it adds the mana as a percent of max.
+--The first is a string, RAW or PERCENT, that determine how to add the mana.
+--The second is how much mana to add.
+--If it's RAW, it adds the mana as a whole number.
+--If it's PERCENT, it adds the mana as a percent of max.
 {
 	RSMana:{
 		Max:100,
+		Cap:300,
 		Regen:["PERCENT",50],
-		Increment:10,
-		Cap:300
+		GrowthChance:40,
+		Increment:10
 	}
 }
 
--Classes:
---Cost is the cost of movement. Set it negative to gain mana on move instead. No default.
---Type is the way it drains - or "drains" - mana. Set it to DRAIN or DRAINPERCENT. No default.
----If it's DRAINPERCENT, Cost will act as a percent of max mana.
+-Classes only:
+--Cost is the cost of movement. Set it negative to gain mana on move instead.
+--Type is the way it drains - or "drains" - mana. Set it to DRAIN or DRAINPERCENT.
+--If it's DRAINPERCENT, Cost will act as a percent of max mana.
 {
 	RSMana:{
 		Cost:5,
-		Cap:300,
+		Type:"DRAIN",
 		Max:100,
+		Cap:300,
 		Regen:["PERCENT",50],
-		Type:"DRAIN"
+		GrowthChance:40,
+		Increment:10
 	}
 }
 
@@ -44,15 +47,23 @@ Currently, you must set custom parameters on each object, as below, to use the p
 --Cost: How much it costs to swing this sword or swig this potion.
 --Gain: How much you gain by swinging this sword or swigging this potion.
 --Type: Can be ADD, ADDPERCENT, DRAIN, or DRAINPERCENT. These should be apparent in effect by now, but...
----ADD increases mana by a raw number of Gain. Incompatible with DRAIN and DRAINPERCENT.
----ADDPERCENT treats Gain as a percent of max mana. Incompatible with DRAIN and DRAINPERCENT.
----DRAIN decreases mana by a raw number of Cost. Incompatible with ADD and ADDPERCENT.
----DRAINPERCENT decreases mana as a percent of max mana. Incompatible with ADD and ADDPERCENT.
+--ADD increases mana by a raw number of Gain. Incompatible with DRAIN and DRAINPERCENT.
+--ADDPERCENT treats Gain as a percent of max mana. Incompatible with DRAIN and DRAINPERCENT.
+--DRAIN decreases mana by a raw number of Cost. Incompatible with ADD and ADDPERCENT.
+--DRAINPERCENT decreases mana as a percent of max mana. Incompatible with ADD and ADDPERCENT.
 {
 	RSMana:{
 		Cost:10,
 		Gain:10,
 		Type:"DRAIN"
+	}
+}
+
+-Weapons only:
+--StrikeGain: Can be set as below to regenerate mana based on damage. This will ignore things like Type and Drain.
+{
+	RSMana:{
+		StrikeDrain:true
 	}
 }
 
@@ -99,19 +110,23 @@ var RS_ManaControl = {
 			var cls = unit.getClass()
 			var manatest = cls.custom.RSMana
 			unit.custom.RSMana = {}
-			unit.custom.RSMana.Max = typeof manatest == 'object' ? Math.min(manatest.Cap, manatest.Max + (manatest.Increment * (unit.getLv()-1))) : Math.min(this._defaultCap, this._defaultMana + (this._defaultInc * (unit.getLv()-1)))
-			unit.custom.RSMana.Current = unit.custom.RSMana.Max
-			unit.custom.RSMana.Regen = typeof manatest.Regen == 'object' ? manatest.Regen : ["placeheld","placeheld"]
-			if (typeof unit.custom.RSMana.Regen[0] == "placeheld"){
+			if (typeof manatest === 'object'){
+				unit.custom.RSMana.Max = Math.min(manatest.Cap, manatest.Max + (manatest.Increment * (unit.getLv()-1)))
+				unit.custom.RSMana.Current = unit.custom.RSMana.Max
+				unit.custom.RSMana.Regen = manatest.Regen
+				unit.custom.RSMana.Cap = manatest.Cap
+				unit.custom.RSMana.Increment = manatest.Increment
+			}
+			else{
+				unit.custom.RSMana.Max = Math.min(this._defaultCap, this._defaultMana + (this._defaultInc * (unit.getLv()-1)))
+				unit.custom.RSMana.Current = unit.custom.RSMana.Max
+				unit.custom.RSMana.Regen = [,]
 				unit.custom.RSMana.Regen[0] = "PERCENT"
-			}
-			if (typeof unit.custom.RSMana.Regen[1] == "placeheld"){
 				unit.custom.RSMana.Regen[1] = this._defaultRegen;
+				unit.custom.RSMana.Cap = this._defaultCap
+				unit.custom.RSMana.Increment = this._defaultInc
 			}
-			unit.custom.RSMana.Cap = typeof manatest.Cap == 'number' ? manatest.Cap : this._defaultCap
-			unit.custom.RSMana.Increment = typeof manatest.Increment == 'number' ? typeof manatest.Increment : this._defaultInc
 		}
-		return false;
 	},
 	
 	regenArmy: function(){
@@ -123,6 +138,40 @@ var RS_ManaControl = {
 		}
 	},
 	
+	increaseMana: function(unit){
+		var chance = 40
+		if (typeof unit.custom.RSMana != 'object'){
+			root.log('no unit mana detected, setting up unit.')
+			this.setupUnit(unit)
+		}
+		if (typeof unit.custom.RSMana.GrowthChance === 'number'){
+			chance = Math.round(unit.custom.RSMana.GrowthChance)
+		}
+		else if (typeof unit.getClass().custom.RSMana.GrowthChance === 'number'){
+			chance = Math.round(unit.getClass().custom.RSMana.GrowthChance)
+		}
+		if (typeof unit.custom.RSMana.Increment == 'number'){
+			if (Probability.getProbability(chance)){
+				unit.custom.RSMana.Max += unit.custom.RSMana.Increment
+				unit.custom.RSMana.Current += unit.custom.RSMana.Increment
+			}
+		}
+		else if (typeof unit.getClass().custom.RSMana.Increment == 'number'){
+			if (Probability.getProbability(chance)){
+				unit.custom.RSMana.Max += unit.getClass().custom.RSMana.Increment
+				unit.custom.RSMana.Current += unit.getClass().custom.RSMana.Increment
+				
+			}
+		}
+		else{
+			if (Probability.getProbability(chance)){
+				unit.custom.RSMana.Max += this._defaultInc
+				unit.custom.RSMana.Current += this._defaultInc
+				
+			}
+		}
+	},
+	
 	setMana: function(unit, obj){
 		var Types = ["DRAIN", "DRAINPERCENT", "ADD", "ADDPERCENT"]
 		if (typeof unit.custom.RSMana != 'object'){
@@ -131,6 +180,10 @@ var RS_ManaControl = {
 		}
 		else if (typeof obj != 'object'){
 			root.log('no mana object detected.')
+			return;
+		}
+		else if (typeof obj.Type != 'string'){
+			root.log('no type detected.')
 			return;
 		}
 		var index = Types.indexOf(obj.Type.toUpperCase())
@@ -153,7 +206,17 @@ var RS_ManaControl = {
 				unit.custom.RSMana.Current = Math.Max(0, Math.min(unit.custom.RSMana.Max, unit.custom.RSMana.Current + Math.round(unit.custom.RSMana.Max*(obj.Gain/100))))
 			}
 		}
-		
+	},
+	
+	strikeGain: function(unit, amt){
+		if (typeof unit.custom.RSMana != 'object'){
+			this.setupUnit(unit)
+		}
+		if (typeof amt != 'number'){
+			root.log('non number, regen strike stopped.')
+			return;
+		}
+		unit.custom.RSMana.Current = Math.max(0, Math.min(unit.custom.RSMana.Max, unit.custom.RSMana.Current + amt))
 	},
 	
 	regenMana: function(unit){
@@ -613,6 +676,9 @@ ItemControl.decreaseLimit = function(unit, item) {
 		if (!item.isWeapon() && item.getCustomKeyword() == "RSMana"){
 			return;
 		}
+		if (item.custom.RSMana.StrikeGain){
+			return;
+		}
 		RS_ManaControl.setMana(unit, item.custom.RSMana)
 	}
 };
@@ -628,13 +694,13 @@ SimulateMove._endMove = function(unit) {
 		manacopy.Cost = manaclass.Cost
 		if (manaskill && typeof manaskill.custom.RSMana == 'object'){
 			if (manaskill.custom.MoveSaveType.toUpperCase() == "PERCENT"){
-				manacopy.Cost = Math.round(manacopy.Cost*(manaskill.MoveSave/100))
+				manacopy.Cost = Math.round(manacopy.Cost*(manaskill.custom.MoveSave/100))
 			}
 			else if (manaskill.custom.MoveSaveType.toUpperCase() == "RAW"){
-				manacopy.Cost = manacopy.Cost - manaskill.MoveSave
+				manacopy.Cost = manacopy.Cost - manaskill.custom.MoveSave
 			}
 		}
-		manacopy.Cost *= unit.getMostResentMov()
+		manacopy.Cost = Math.round(unit.getMostResentMov()*manacopy.Cost)
 		unit.custom.CopyCatMana = manacopy
 	}
 };
@@ -720,15 +786,15 @@ ItemControl.isWeaponAvailable = function(unit, item){
 		return result;
 	}
 	else if (result && typeof item.custom.RSMana == 'object'){
-		if (item.custom.RSMana.Type in ["ADD", "ADDPERCENT"]){
+		if (typeof item.custom.RSMana.Type === 'string' && item.custom.RSMana.Type.toUpperCase() in ["ADD", "ADDPERCENT"]){
 			return true;
 		}
-		else if (item.custom.RSMana.Type.toUpperCase() == 'DRAINPERCENT'){
+		else if (typeof item.custom.RSMana.Type === 'string' && item.custom.RSMana.Type.toUpperCase() == 'DRAINPERCENT'){
 			if (unit.custom.RSMana.Current < Math.round(unit.custom.RSMana.Max*(item.custom.RSMana.Cost/100))){
 				return false;
 			}
 		}
-		else if (item.custom.RSMana.Type.toUpperCase() == 'DRAIN' && unit.custom.RSMana.Current < item.custom.RSMana.Cost){
+		else if (typeof item.custom.RSMana.Type === 'string' && item.custom.RSMana.Type.toUpperCase() == 'DRAIN' && unit.custom.RSMana.Current < item.custom.RSMana.Cost){
 			return false;
 		}
 		return true;
@@ -740,7 +806,19 @@ var GrowMana01 = ExperienceControl._addExperience
 ExperienceControl._addExperience = function(unit, getExp) {
 	var result = GrowMana01.call(this, unit, getExp)
 	if (result && typeof unit.custom.RSMana == 'object'){
-		unit.custom.RSMana.Max = Math.min(unit.custom.RSMana.Cap, unit.custom.RSMana.Max + unit.custom.RSMana.Increment)
+		RS_ManaControl.increaseMana(unit)
 	}
 	return result;
+};
+
+var SpendMana03 = AttackEvaluator.HitCritical.evaluateAttackEntry;
+AttackEvaluator.HitCritical.evaluateAttackEntry = function(virtualActive, virtualPassive, attackEntry) {
+	SpendMana03.call(this, virtualActive, virtualPassive, attackEntry)
+	if (attackEntry.isHit){
+		var active = virtualActive.unitSelf
+		var weapon = ItemControl.getEquippedWeapon(active)
+		if (typeof active.custom.RSMana === 'object' && weapon != null && typeof weapon.custom.RSMana == 'object' && weapon.custom.RSMana.StrikeGain){
+			RS_ManaControl.strikeGain(active, attackEntry.damagePassive)
+		}
+	}
 };
