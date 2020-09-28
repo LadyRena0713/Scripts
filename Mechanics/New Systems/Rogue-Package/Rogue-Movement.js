@@ -1,3 +1,17 @@
+var PickupLoot = function(unit, x, y){
+	var array = RS_TerrainControl._lootArray.length != 0 ? RS_TerrainControl._lootArray : root.getMetaSession().global.lootArray != undefined ? root.getMetaSession().global.lootArray : []
+	var i;
+	if (UnitItemControl.isUnitItemSpace(unit)){
+		for (i = 0; i < array.length; i++){
+			if (array[i].pos.x == x && array[i].pos.y == y){
+				var item = RS_TerrainControl.convertLootEx(array[i])
+				UnitItemControl.pushItem(unit, item)
+				array.splice(i, 1)
+			}
+		}
+	}
+}
+
 var ROGUE001 = MapCursor.changeCursorValue;
 MapCursor._changeCursorValue = function(input) {
 	var Dynamo = createObject(DynamicEvent)
@@ -11,16 +25,14 @@ MapCursor._changeCursorValue = function(input) {
 		if (input === InputType.LEFT) {
 			var Tile = root.getCurrentSession().getTerrainFromPos(unit.getMapX()-1,unit.getMapY(),true)
 			if ((Tile !== null && Tile.getMovePoint(unit) > 0) && PosChecker.getUnitFromPos(unit.getMapX()-1,unit.getMapY()) === null && !unit.isWait()){
-				unit.setDirection(DirectionType.LEFT)
 				xCursor--;
+				unit.setDirection(DirectionType.LEFT)
 				generator.unitSlide(unit, DirectionType.LEFT, 3, SlideType.START, false);
 				generator.unitSlide(unit, 0, 0, SlideType.UPDATEEND, false);
 				generator.execute()
 				// unit.setMapX(unit.getMapX()-1)
-				if (typeof FogLight === 'object' && FogLight.isActive()){
-					FogLight.setFog();
-				}
 				unit.setWait(true)
+				PickupLoot(unit, unit.getMapX()-1,unit.getMapY())
 			}
 		}
 		else if (input === InputType.UP) {
@@ -32,10 +44,8 @@ MapCursor._changeCursorValue = function(input) {
 				generator.unitSlide(unit, 0, 0, SlideType.UPDATEEND, false);
 				generator.execute()
 				// unit.setMapY(unit.getMapY()-1)
-				if (typeof FogLight === 'object' && FogLight.isActive()){
-					FogLight.setFog();
-				}
 				unit.setWait(true)
+				PickupLoot(unit, unit.getMapX(),unit.getMapY()-1)
 			}
 		}
 		else if (input === InputType.RIGHT) {
@@ -47,10 +57,8 @@ MapCursor._changeCursorValue = function(input) {
 				generator.unitSlide(unit, 0, 0, SlideType.UPDATEEND, false);
 				generator.execute()
 				// unit.setMapX(unit.getMapX()+1)
-				if (typeof FogLight === 'object' && FogLight.isActive()){
-					FogLight.setFog();
-				}
 				unit.setWait(true)
+				PickupLoot(unit, unit.getMapX()+1,unit.getMapY())
 			}
 		}
 		else if (input === InputType.DOWN) {
@@ -62,11 +70,23 @@ MapCursor._changeCursorValue = function(input) {
 				generator.unitSlide(unit, 0, 0, SlideType.UPDATEEND, false);
 				generator.execute()
 				// unit.setMapY(unit.getMapY()+1)
-				if (typeof FogLight === 'object' && FogLight.isActive()){
-					FogLight.setFog();
-				}
 				unit.setWait(true)
+				PickupLoot(unit, unit.getMapX(),unit.getMapY()+1)
 			}
+		}
+	}
+	else{
+		if (input === InputType.LEFT) {
+			xCursor--;
+		}
+		else if (input === InputType.UP) {
+			yCursor--;
+		}
+		else if (input === InputType.RIGHT) {
+			xCursor++;
+		}
+		else if (input === InputType.DOWN) {
+			yCursor++;
 		}
 	}
 	
@@ -104,9 +124,9 @@ TurnMarkFlowEntry._completeMemberData = function(turnChange) {
 	
 	this._counter.disableGameAcceleration();
 	// this._counter.setCounterInfo(36);
-	this._playTurnChangeSound();
-	
-	return EnterResult.OK;
+	// this._playTurnChangeSound();
+	this.doMainAction(true)
+	return EnterResult.NOTENTER;
 };
 
 var ROGUE003 = MapEdit._cancelAction;
@@ -226,4 +246,70 @@ ReactionFlowEntry._startReactionAnime = function() {
 	// var pos = LayoutControl.getMapAnimationPos(x, y, anime);
 	
 	// this._dynamicAnime.startDynamicAnime(anime, pos.x, pos.y, anime);
+};
+
+UnitRangePanel.drawRangePanel = function() {
+	return;
+}
+
+EnemyTurn._moveTop = function() {
+	var result;
+	
+	for (;;) {
+		// Change a mode because the event occurs.
+		if (this._eventChecker.enterEventChecker(root.getCurrentSession().getAutoEventList(), EventType.AUTO) === EnterResult.OK) {
+			this.changeCycleMode(EnemyTurnMode.AUTOEVENTCHECK);
+			return MoveResult.CONTINUE;
+		}
+		
+		if (GameOverChecker.isGameOver()) {
+			GameOverChecker.startGameOver();
+		}
+		
+		// When the event is executed and if the scene itself has been changed,
+		// don't continue. For instance, when the game is over etc.
+		if (root.getCurrentScene() !== SceneType.FREE) {
+			return MoveResult.CONTINUE;
+		}
+		
+		// Get the unit who should move.
+		this._orderUnit = this._checkNextOrderUnit();
+		if (this._orderUnit === null) {
+			// No more enemy exists, so enter to end the return.
+			this.changeCycleMode(EnemyTurnMode.END);
+			break;
+		}
+		else {
+			// It's possible to refer to the control character of \act at the event.
+			root.getCurrentSession().setActiveEventUnit(this._orderUnit);
+			
+			this._straightFlow.resetStraightFlow();
+			
+			// Execute a flow of PreAction.
+			// PreAction is an action before the unit moves or attacks,
+			// such as ActivePatternFlowEntry.
+			result = this._straightFlow.enterStraightFlow();
+			if (result === EnterResult.NOTENTER) {
+				if (this._startAutoAction()) {
+					// Change a mode because graphical action starts.
+					this.changeCycleMode(EnemyTurnMode.AUTOACTION);
+					break;
+				}
+				
+				// If this method returns false, it means to loop, so the next unit is immediately checked.
+				// If there are many units, looping for a long time and the busy state occurs.
+				if (this._isSkipProgressDisplayable()) {
+					this.changeCycleMode(EnemyTurnMode.TOP);
+					break;
+				}
+			}
+			else {
+				// Change a mode because PreAction exists.
+				this.changeCycleMode(EnemyTurnMode.PREACTION);
+				break;
+			}
+		}
+	}
+	
+	return MoveResult.CONTINUE;
 };

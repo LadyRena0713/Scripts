@@ -38,11 +38,11 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				if (unit.blockGrowth){
+				if (unit.custom.blockGrowth){
 					continue;
 				}
 				else{
-					this._adjustGrowth(unit,level,isSet);
+					this._adjustUnit(unit,level,isSet);
 				}
 			}
 		}
@@ -51,11 +51,11 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				if (unit.blockGrowth){
+				if (unit.custom.blockGrowth){
 					continue;
 				}
 				else{
-					this._adjustGrowth(unit,level,isSet);
+					this._adjustUnit(unit,level,isSet);
 				}
 			}
 		}
@@ -64,11 +64,11 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				if (unit.blockGrowth){
+				if (unit.custom.blockGrowth){
 					continue;
 				}
 				else{
-					this._adjustGrowth(unit,level,isSet);
+					this._adjustUnit(unit,level,isSet);
 				}
 			}
 		}
@@ -81,7 +81,7 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				this._adjustGrowth(unit,level,isSet);
+				this._adjustUnit(unit,level,isSet);
 			}
 		}
 		else if (type === UnitType.ALLY){
@@ -89,7 +89,7 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				this._adjustGrowth(unit,level,isSet);
+				this._adjustUnit(unit,level,isSet);
 			}
 		}
 		else{
@@ -97,7 +97,7 @@ var LevelSetter = {
 			count = list.getCount();
 			for (i = 0; i < count; i++){
 				unit = list.getData(i)
-				this._adjustGrowth(unit,level,isSet);
+				this._adjustUnit(unit,level,isSet);
 			}
 		}
 	}
