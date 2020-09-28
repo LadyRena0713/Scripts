@@ -135,6 +135,54 @@ SortieSetting._setInitialUnitPos = function(){
 	}
 };
 
+var SAS004 = SortieSetting._clearSortieList;
+SortieSetting._clearSortieList = function() {
+	var CurMap = root.getCurrentSession().getCurrentMapInfo()
+	if (CurMap.custom.Divided && typeof CurMap.custom.Army === "string"){
+		var i, unit;
+		var list = PlayerList.getArmyList(CurMap.custom.Army);
+		var count = list.getCount();
+		
+		// All units are set as no sortie states.
+		for (i = 0; i < count; i++) {
+			unit = list.getData(i);
+			this.nonsortieUnit(unit);
+		}
+	}
+	else{
+		SAS004.call(this)
+	}
+};
+
+var SAS005 = SortieSetting.setSortieMark;
+SortieSetting.setSortieMark = function(index) {
+	var CurMap = root.getCurrentSession().getCurrentMapInfo()
+	if (CurMap.custom.Divided && typeof CurMap.custom.Army === "string"){
+		var list = PlayerList.getArmyList(CurMap.custom.Army);
+		if (index >= list.getCount()){
+			return false;
+		}
+		var unit = list.getData(index);
+		
+		if (!this.isForceSortie(unit)) {	
+			if (unit.getSortieState() === SortieType.UNSORTIE) {
+				this._sortieUnit(unit);
+			}
+			else {
+				this.nonsortieUnit(unit);
+			}
+		}
+		else {
+			return false;
+		}
+		
+		return true;
+	}
+	else{
+		return SAS005.call(this, index);
+	}
+}
+
 PlayerList.getArmyList = function(ArmyParam){
 	return AllUnitList.getArmyList(this.getMainList(),ArmyParam);
 };
