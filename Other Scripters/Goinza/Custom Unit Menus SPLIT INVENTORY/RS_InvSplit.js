@@ -18,6 +18,10 @@ The effects are as follows:
 */
 
 (function(){
+var GradCol1 = 0xF9A600 //Set a hex code after 0x.
+var GradCol2 = 0xF9FF00 //Set a hex code after 0x.
+var GradVer1 = GradientType.RADIAL //Or set GradientType.LINEAR
+var GradVer2 = "Round" //or set "Sharp" for a boxier rectangle.
 var RSWeaponWindow = defineObject(ItemListWindow,
 {
 	initialize: function() {
@@ -74,7 +78,6 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 		}
 		
 		this.objectSetEnd();
-		
 		this.resetAvailableData();
 	},
 	
@@ -82,6 +85,63 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 	},
 	
 	setStockItemFormationFromWeaponType: function(weapontype) {
+	},
+	
+	drawScrollContent: function(x, y, object, isSelect, index) {
+		var manager = root.getGraphicsManager() //don't touch this
+		var canvas = manager.getCanvas() //don't touch this
+		var gradient = canvas.createGradient() //don't touch this
+		var textui = this.getParentTextUI();//don't touch this
+		var font = textui.getFont();//don't touch this
+		gradient.beginGradient(GradVer1) //don't touch this
+		gradient.addColor(GradCol1, 123) //don't touch this
+		gradient.addColor(GradCol2, 123) //don't touch this
+		gradient.endGradient() //don't touch this
+		canvas.setGradient(gradient) //don't touch this
+		if (this._isActive){
+			if (index === this.getIndex()){
+				if (GradVer2 === "Round"){
+					canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
+				}
+				else if (GradVer2 === "Sharp"){
+					canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
+				}
+			}
+		}
+		var isAvailable, color;
+		var textui = root.queryTextUI("default_window")
+		var font = textui.getFont();
+		
+		if (object === null) {
+			return;
+		}
+		
+		if (this._availableArray !== null) {
+			isAvailable = this._availableArray[index];
+		}
+		else {
+			isAvailable = true;
+		}
+		
+		color = 0xffffff
+		
+		if (isAvailable) {
+			ItemRenderer.drawItem(x, y, object, color, font, true);
+		}
+		else {
+			// Draw it tinted if items cannot be used.
+			ItemRenderer.drawItemAlpha(x, y, object, color, font, true, 120);
+		}
+		if (this.getObjectFromIndex(index) === ItemControl.getEquippedWeapon(this._unit)){
+			var tWide = TextRenderer.getTextWidth(this.getObjectFromIndex(index).getName(), font) + root.getIconWidth() + 8
+			var oHeight = this.getObjectHeight()
+			var iWidth = root.getIconWidth()
+			var iHeight = root.getIconHeight()
+			var list = root.getBaseData().getGraphicsResourceList(GraphicsType.ICON, true).getCollectionData(1, 0).getId()
+			var icon = root.createResourceHandle(true, list, 0, 4, 0)
+			var pic = GraphicsRenderer.getGraphics(icon, GraphicsType.ICON)
+			pic.drawStretchParts(x+tWide, (oHeight*index)+y, 24, 24, iWidth*4, 0, 24, 24)
+		}
 	}
 }
 );
@@ -184,6 +244,53 @@ var ItemOnlyScrollbar = defineObject(ItemListScrollbar,
 			if (item !== null && !item.isWeapon()) {
 				this._availableArray.push(this._isAvailable(item, false, i));
 			}
+		}
+	},
+	
+	drawScrollContent: function(x, y, object, isSelect, index) {
+		var manager = root.getGraphicsManager() //don't touch this
+		var canvas = manager.getCanvas() //don't touch this
+		var gradient = canvas.createGradient() //don't touch this
+		var textui = root.queryTextUI("default_window");//don't touch this
+		var font = textui.getFont();//don't touch this
+		gradient.beginGradient(GradVer1) //don't touch this
+		gradient.addColor(GradCol1, 123) //don't touch this
+		gradient.addColor(GradCol2, 123) //don't touch this
+		gradient.endGradient() //don't touch this
+		canvas.setGradient(gradient) //don't touch this
+		if (this._isActive){
+			if (index === this.getIndex()){
+				if (GradVer2 === "Round"){
+					canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
+				}
+				else if (GradVer2 === "Sharp"){
+					canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
+				}
+			}
+		}
+		var isAvailable, color;
+		var textui = root.queryTextUI("default_window")
+		var font = textui.getFont();
+		
+		if (object === null) {
+			return;
+		}
+		
+		if (this._availableArray !== null) {
+			isAvailable = this._availableArray[index];
+		}
+		else {
+			isAvailable = true;
+		}
+
+		color = 0xffffff
+		
+		if (isAvailable) {
+			ItemRenderer.drawItem(x, y, object, color, font, true);
+		}
+		else {
+			// Draw it tinted if items cannot be used.
+			ItemRenderer.drawItemAlpha(x, y, object, color, font, true, 120);
 		}
 	}
 }
@@ -362,7 +469,20 @@ var ItemOnlyInteraction = defineObject(ItemInteraction,
 		this._scrollbar.setScrollFormation(1, DefineControl.getVisibleUnitItemCount());
 		
 		this._window = createWindowObject(ItemInfoWindow, this);
-	}
+	},
+	
+	setUnitData: function(unit) {
+        this._scrollbar.setDataScrollbar(unit);
+        this._changeTopic();
+    },
+	
+	getTitle: function(){
+		return "Items"
+	},
+	
+	hasWindow: function() {
+        return this._window!=null;
+    }
 }
 );
 
@@ -376,6 +496,10 @@ var WepOnlyInteraction = defineObject(ItemInteraction,
 		
 		this._window = createWindowObject(ItemInfoWindow, this);
 	},
+	
+	hasWindow: function() {
+        return this._window!=null;
+    },
 	
 	setUnitData: function(unit) {
         this._scrollbar.setDataScrollbar(unit);
@@ -406,7 +530,7 @@ var WepOnlyInteraction = defineObject(ItemInteraction,
 }
 );
 
-var UnitMenuBottomItemWindow = defineObject(UnitMenuBottomWindow,
+var UnitMenuBottomItemWindow = defineObject(CustomBottomUnitWindow,
 {
 	_topLeftInteraction: null,
     _topRightInteraction: null,
@@ -423,7 +547,7 @@ var UnitMenuBottomItemWindow = defineObject(UnitMenuBottomWindow,
 		this._skillInteraction = createObject(SkillInteraction);
 		this._itemInteraction = createObject(ItemOnlyInteraction);
 		this._statusScrollbar = createScrollbarObject(UnitStatusScrollbar, this);
-		this._topLeftInteraction = createObject(Options.TOPLEFT[1]);
+		this._topLeftInteraction = createObject(this._itemInteraction);
         this._topRightInteraction = createObject(Options.TOPRIGHT[1]);
         this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[1]);
         this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[1]);
@@ -434,12 +558,12 @@ var UnitMenuBottomItemWindow = defineObject(UnitMenuBottomWindow,
 	},
 	
 	isTracingHelp: function(){
-		return true;
+		return this._itemInteraction._scrollbar.isActive || MouseControl._activeScrollbar === this._itemInteraction._scrollbar
 	}
 }
 );
 
-var UnitMenuBottomWeaponWindow = defineObject(UnitMenuBottomWindow,
+var UnitMenuBottomWeaponWindow = defineObject(CustomBottomUnitWindow,
 {
 	_topLeftInteraction: null,
     _topRightInteraction: null,
@@ -467,7 +591,7 @@ var UnitMenuBottomWeaponWindow = defineObject(UnitMenuBottomWindow,
 	},
 	
 	isTracingHelp: function(){
-		return true;
+		return this._itemInteraction._scrollbar.isActive || MouseControl._activeScrollbar === this._itemInteraction._scrollbar
 	}
 }
 );
@@ -477,8 +601,14 @@ var UMBWC0 = UnitMenuScreen._configureBottomWindows;
 UnitMenuScreen._configureBottomWindows = function(groupArray) {
 	UMBWC0.call(this, groupArray);
 	groupArray.splice(0, 1)
-	groupArray.insertObject(UnitMenuBottomItemWindow, 0)
+	var window;
 	groupArray.insertObject(UnitMenuBottomWeaponWindow, 0)
+	groupArray.insertObject(UnitMenuBottomItemWindow, 1)
+	for (var i=1; i<Options.WINDOWS_COUNT; i++) {
+		window = createWindowObject(CustomBottomUnitWindow, this);
+		window.setIndex(i);
+		groupArray.push(window);
+	}
 };
 
 var EquipCommandMode = {

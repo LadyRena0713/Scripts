@@ -11,8 +11,8 @@
         // for (var i=1; i<Options.WINDOWS_COUNT; i++) {
             // window = createWindowObject(CustomBottomUnitWindow, this);
             // window.setIndex(i);
-            // groupArray.push(window); 
+            // groupArray.push(window);
         // }
-    // }    
+    // }
 
 })()
