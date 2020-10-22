@@ -551,14 +551,6 @@ var UnitMenuBottomItemWindow = defineObject(CustomBottomUnitWindow,
         this._topRightInteraction = createObject(Options.TOPRIGHT[1]);
         this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[1]);
         this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[1]);
-	},
-	
-	getHelpText: function(){
-		return "Items";
-	},
-	
-	isTracingHelp: function(){
-		return this._itemInteraction._scrollbar.isActive || MouseControl._activeScrollbar === this._itemInteraction._scrollbar
 	}
 }
 );
@@ -584,14 +576,6 @@ var UnitMenuBottomWeaponWindow = defineObject(CustomBottomUnitWindow,
         this._topRightInteraction = createObject(Options.TOPRIGHT[0]);
         this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[0]);
         this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[0]);
-	},
-	
-	getHelpText: function(){
-		return "Weapons";
-	},
-	
-	isTracingHelp: function(){
-		return this._itemInteraction._scrollbar.isActive || MouseControl._activeScrollbar === this._itemInteraction._scrollbar
 	}
 }
 );
