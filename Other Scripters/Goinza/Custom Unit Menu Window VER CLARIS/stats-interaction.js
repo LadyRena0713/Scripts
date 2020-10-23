@@ -4,7 +4,7 @@ var StatsInteraction = defineObject(TopCustomInteraction, {
 
     initialize: function() {
 		this._scrollbar = createScrollbarObject(this.getScrollbarObject(), this);
-		this._scrollbar.setScrollFormation(2, DataConfig.getMaxUnitItemCount()-1);
+		this._scrollbar.setScrollFormation(2, (DataConfig.getMaxUnitItemCount()/2)-1);
     },
   
     getTitle: function() {
@@ -35,7 +35,7 @@ var AltStatsInteraction = defineObject(StatsInteraction, {
 
     initialize: function() {
 		this._scrollbar = createScrollbarObject(this.getScrollbarObject(), this);
-		this._scrollbar.setScrollFormation(3, DataConfig.getMaxUnitItemCount()-1);
+		this._scrollbar.setScrollFormation(3, (DataConfig.getMaxUnitItemCount()/2)-1);
     },
 
     getScrollbarObject: function() {

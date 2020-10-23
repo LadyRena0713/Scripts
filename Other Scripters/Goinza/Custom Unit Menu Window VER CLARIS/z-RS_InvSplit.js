@@ -488,7 +488,7 @@ var ItemOnlyInteraction = defineObject(ItemInteraction,
 	
 	initialize: function() {
 		this._scrollbar = createScrollbarObject(ItemDropOnlyScrollbar, this);
-		this._scrollbar.setScrollFormation(1, DefineControl.getVisibleUnitItemCount());
+		this._scrollbar.setScrollFormation(1, DefineControl.getVisibleUnitItemCount()-1);
 		
 		this._window = createWindowObject(ItemInfoWindow, this);
 	},
@@ -564,7 +564,7 @@ var WepOnlyInteraction = defineObject(TopCustomInteraction,
 	
 	initialize: function() {
 		this._scrollbar = createScrollbarObject(WepDropOnlyScrollbar, this);
-		this._scrollbar.setScrollFormation(1, DefineControl.getVisibleUnitItemCount());
+		this._scrollbar.setScrollFormation(1, DefineControl.getVisibleUnitItemCount()-1);
 		
 		this._window = createWindowObject(ItemInfoWindow, this);
 	},

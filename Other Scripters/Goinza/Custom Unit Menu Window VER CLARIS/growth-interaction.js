@@ -4,7 +4,7 @@ var GrowthInteraction = defineObject(TopCustomInteraction, {
 
     initialize: function() {
 		this._scrollbar = createScrollbarObject(this.getScrollbarObject(), this);
-		this._scrollbar.setScrollFormation(3, DataConfig.getMaxUnitItemCount()-1);
+		this._scrollbar.setScrollFormation(3, (DataConfig.getMaxUnitItemCount()/2)-1);
     },
     
     getTitle: function() {
@@ -83,7 +83,7 @@ var PlayerGrowthInteraction = defineObject(GrowthInteraction, {
     setUnitData: function(unit) {
         this._visible = unit.getUnitType()==UnitType.PLAYER;
         this._scrollbar = createScrollbarObject(this.getScrollbarObject(), this);
-		this._scrollbar.setScrollFormation(3, DataConfig.getMaxUnitItemCount()-1);
+		this._scrollbar.setScrollFormation(3, (DataConfig.getMaxUnitItemCount()/2)-1);
         this._scrollbar.setDataScrollbar(unit);
         this._changeTopic();
     },
