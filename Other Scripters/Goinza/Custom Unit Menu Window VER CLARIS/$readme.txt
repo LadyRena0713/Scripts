@@ -3,6 +3,8 @@ By Goinza
 Version 2.3
 August 11, 2020
 
+-NOTE FROM CLARIS: READ UNDER GOINZA'S INSTRUCTIONS FOR MODIFICATION INFO-
+
 This plugin allows to change the default bottom window of the unit menu screen, so you can show data from the unit that is not available by default.
 You can also add more windows, with each window showing differen data of the unit.
 The data that will be displayed will be choosen by the user from the list of data that was added to the plugin.
@@ -100,3 +102,10 @@ VERSION HISTORY
 
 2.3 - August 11, 2020
     - Fixed a bug that would crash the game when using a item of the Resurrection type.
+	
+	
+==CLARIS ADDITIONS==
+-Supports the Equipment Script, adding Shields and Accessories. Read z-Equipment-Script for usage details.
+--Create Shields and Accessories to really customize your units in battle!
+-Supports a split inventory. Read z-RS_InvSplit for usage details. In short, creates a separate item and weapon window.
+--Set max inventory size to 2x what you want it to be in Database.

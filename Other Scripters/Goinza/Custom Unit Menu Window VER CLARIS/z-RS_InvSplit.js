@@ -16,8 +16,6 @@ The effects are as follows:
 
 
 */
-
-(function(){
 var GradCol1 = 0xF9A600 //Set a hex code after 0x.
 var GradCol2 = 0xF9FF00 //Set a hex code after 0x.
 var GradVer1 = GradientType.RADIAL //Or set GradientType.LINEAR
@@ -41,8 +39,18 @@ var RSWeaponWindow = defineObject(ItemListWindow,
 }
 );
 
+var InvMarkCL1 = ItemListScrollbar.initialize;
+
 var WepListScrollbar = defineObject(ItemListScrollbar,
 {
+	initialize: function(){
+		InvMarkCL1.call(this)
+		var manager = root.getGraphicsManager() //don't touch this
+		var canvas = manager.getCanvas() //don't touch this
+		this._canvas = canvas; //don't touch this
+		this._gradient = this._canvas.createGradient() //don't touch this
+	},
+		
 	setUnitMaxItemFormation: function(unit) {
 		var i;
 		var maxCount = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
@@ -88,23 +96,18 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 	},
 	
 	drawScrollContent: function(x, y, object, isSelect, index) {
-		var manager = root.getGraphicsManager() //don't touch this
-		var canvas = manager.getCanvas() //don't touch this
-		var gradient = canvas.createGradient() //don't touch this
-		var textui = this.getParentTextUI();//don't touch this
-		var font = textui.getFont();//don't touch this
-		gradient.beginGradient(GradVer1) //don't touch this
-		gradient.addColor(GradCol1, 123) //don't touch this
-		gradient.addColor(GradCol2, 123) //don't touch this
-		gradient.endGradient() //don't touch this
-		canvas.setGradient(gradient) //don't touch this
 		if (this._isActive){
+			this._gradient.beginGradient(GradVer1) //don't touch this
+			this._gradient.addColor(GradCol1, 123) //don't touch this
+			this._gradient.addColor(GradCol2, 123) //don't touch this
+			this._gradient.endGradient() //don't touch this
+			this._canvas.setGradient(this._gradient) //don't touch this
 			if (index === this.getIndex()){
 				if (GradVer2 === "Round"){
-					canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
+					this._canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
 				}
 				else if (GradVer2 === "Sharp"){
-					canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
+					this._canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
 				}
 			}
 		}
@@ -133,6 +136,8 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 			ItemRenderer.drawItemAlpha(x, y, object, color, font, true, 120);
 		}
 		if (this.getObjectFromIndex(index) === ItemControl.getEquippedWeapon(this._unit)){
+			var textui = this.getParentTextUI();//don't touch this
+			var font = textui.getFont();//don't touch this
 			var tWide = TextRenderer.getTextWidth(this.getObjectFromIndex(index).getName(), font) + root.getIconWidth() + 8
 			var oHeight = this.getObjectHeight()
 			var iWidth = root.getIconWidth()
@@ -190,6 +195,15 @@ ItemSelectMenu._resetItemList = function() {
 
 var ItemOnlyScrollbar = defineObject(ItemListScrollbar,
 {
+	
+	initialize: function(){
+		InvMarkCL1.call(this)
+		var manager = root.getGraphicsManager() //don't touch this
+		var canvas = manager.getCanvas() //don't touch this
+		this._canvas = canvas; //don't touch this
+		this._gradient = this._canvas.createGradient() //don't touch this
+	},
+	
 	setUnitMaxItemFormation: function(unit) {
 		var i, item;
 		var maxCount = DataConfig.getMaxUnitItemCount()
@@ -248,23 +262,18 @@ var ItemOnlyScrollbar = defineObject(ItemListScrollbar,
 	},
 	
 	drawScrollContent: function(x, y, object, isSelect, index) {
-		var manager = root.getGraphicsManager() //don't touch this
-		var canvas = manager.getCanvas() //don't touch this
-		var gradient = canvas.createGradient() //don't touch this
-		var textui = root.queryTextUI("default_window");//don't touch this
-		var font = textui.getFont();//don't touch this
-		gradient.beginGradient(GradVer1) //don't touch this
-		gradient.addColor(GradCol1, 123) //don't touch this
-		gradient.addColor(GradCol2, 123) //don't touch this
-		gradient.endGradient() //don't touch this
-		canvas.setGradient(gradient) //don't touch this
 		if (this._isActive){
+			this._gradient.beginGradient(GradVer1) //don't touch this
+			this._gradient.addColor(GradCol1, 123) //don't touch this
+			this._gradient.addColor(GradCol2, 123) //don't touch this
+			this._gradient.endGradient() //don't touch this
+			this._canvas.setGradient(this._gradient) //don't touch this
 			if (index === this.getIndex()){
 				if (GradVer2 === "Round"){
-					canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
+					this._canvas.drawRoundedRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4, 12, 12)
 				}
 				else if (GradVer2 === "Sharp"){
-					canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
+					this._canvas.drawRectangle(x, y, this.getObjectWidth()-12, this.getObjectHeight()-4)
 				}
 			}
 		}
@@ -291,6 +300,19 @@ var ItemOnlyScrollbar = defineObject(ItemListScrollbar,
 		else {
 			// Draw it tinted if items cannot be used.
 			ItemRenderer.drawItemAlpha(x, y, object, color, font, true, 120);
+		}
+		var list = [ItemControl.getEquippedShield(this._unit), ItemControl.getEquippedArmband(this._unit)]
+		if (list.indexOf(this.getObjectFromIndex(index)) !== -1){
+			var textui = root.queryTextUI('default_window');//don't touch this
+			var font = textui.getFont();//don't touch this
+			var tWide = TextRenderer.getTextWidth(this.getObjectFromIndex(index).getName(), font) + root.getIconWidth() + 8
+			var oHeight = this.getObjectHeight()
+			var iWidth = root.getIconWidth()
+			var iHeight = root.getIconHeight()
+			var list = root.getBaseData().getGraphicsResourceList(GraphicsType.ICON, true).getCollectionData(1, 0).getId()
+			var icon = root.createResourceHandle(true, list, 0, 4, 0)
+			var pic = GraphicsRenderer.getGraphics(icon, GraphicsType.ICON)
+			pic.drawStretchParts(x+tWide, y, 24, 24, iWidth*4, 0, 24, 24)
 		}
 	}
 }
@@ -486,7 +508,57 @@ var ItemOnlyInteraction = defineObject(ItemInteraction,
 }
 );
 
-var WepOnlyInteraction = defineObject(ItemInteraction,
+var UnitMenuBottomItemWindow = defineObject(CustomBottomUnitWindow,
+{
+	_topLeftInteraction: null,
+    _topRightInteraction: null,
+    _bottomLeftInteraction: null,
+    _bottomRightInteraction: null,
+	_unitMenuHelp: -1,
+    _index: 0,
+	
+	setIndex: function(newIndex) {
+        this._index = newIndex;
+    },
+	
+	setUnitMenuData: function() {
+		this._skillInteraction = createObject(SkillInteraction);
+		this._itemInteraction = createObject(ItemOnlyInteraction);
+		this._statusScrollbar = createScrollbarObject(UnitStatusScrollbar, this);
+		this._topLeftInteraction = createObject(Options.TOPLEFT[this._index]);
+        this._topRightInteraction = createObject(Options.TOPRIGHT[this._index]);
+        this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[this._index]);
+        this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[this._index]);
+	}
+}
+);
+
+var UnitMenuBottomWeaponWindow = defineObject(CustomBottomUnitWindow,
+{
+	_topLeftInteraction: null,
+    _topRightInteraction: null,
+    _bottomLeftInteraction: null,
+    _bottomRightInteraction: null,
+	_unitMenuHelp: -1,
+    _index: 0,
+	
+	setIndex: function(newIndex) {
+        this._index = newIndex;
+    },
+	
+	setUnitMenuData: function() {
+		this._skillInteraction = createObject(SkillInteraction);
+		this._itemInteraction = createObject(WepOnlyInteraction);
+		this._statusScrollbar = createScrollbarObject(UnitStatusScrollbar, this);
+		this._topLeftInteraction = createObject(Options.TOPLEFT[this._index]);
+        this._topRightInteraction = createObject(Options.TOPRIGHT[this._index]);
+        this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[this._index]);
+        this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[this._index]);
+	}
+}
+);
+
+var WepOnlyInteraction = defineObject(TopCustomInteraction,
 {
 	_textui: null,
 	
@@ -529,71 +601,6 @@ var WepOnlyInteraction = defineObject(ItemInteraction,
     }
 }
 );
-
-var UnitMenuBottomItemWindow = defineObject(CustomBottomUnitWindow,
-{
-	_topLeftInteraction: null,
-    _topRightInteraction: null,
-    _bottomLeftInteraction: null,
-    _bottomRightInteraction: null,
-	_unitMenuHelp: -1,
-    _index: 0,
-	
-	setIndex: function(newIndex) {
-        this._index = newIndex;
-    },
-	
-	setUnitMenuData: function() {
-		this._skillInteraction = createObject(SkillInteraction);
-		this._itemInteraction = createObject(ItemOnlyInteraction);
-		this._statusScrollbar = createScrollbarObject(UnitStatusScrollbar, this);
-		this._topLeftInteraction = createObject(this._itemInteraction);
-        this._topRightInteraction = createObject(Options.TOPRIGHT[1]);
-        this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[1]);
-        this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[1]);
-	}
-}
-);
-
-var UnitMenuBottomWeaponWindow = defineObject(CustomBottomUnitWindow,
-{
-	_topLeftInteraction: null,
-    _topRightInteraction: null,
-    _bottomLeftInteraction: null,
-    _bottomRightInteraction: null,
-	_unitMenuHelp: -1,
-    _index: 0,
-	
-	setIndex: function(newIndex) {
-        this._index = newIndex;
-    },
-	
-	setUnitMenuData: function() {
-		this._skillInteraction = createObject(SkillInteraction);
-		this._itemInteraction = createObject(WepOnlyInteraction);
-		this._statusScrollbar = createScrollbarObject(UnitStatusScrollbar, this);
-		this._topLeftInteraction = createObject(this._itemInteraction);
-        this._topRightInteraction = createObject(Options.TOPRIGHT[0]);
-        this._bottomLeftInteraction = createObject(Options.BOTTOMLEFT[0]);
-        this._bottomRightInteraction = createObject(Options.BOTTOMRIGHT[0]);
-	}
-}
-);
-
-// Removed function. Feature may not be possible. Splits inventory view.
-var UMBWC0 = UnitMenuScreen._configureBottomWindows;
-UnitMenuScreen._configureBottomWindows = function(groupArray) {
-	UMBWC0.call(this, groupArray);
-	groupArray.splice(0, 1)
-	var window;
-	groupArray.insertObject(UnitMenuBottomWeaponWindow, 0)
-	groupArray.insertObject(UnitMenuBottomItemWindow, 1)
-	for (var i=1; i<Options.WINDOWS_COUNT; i++) {
-		window = createWindowObject(CustomBottomUnitWindow, this);
-		window.setIndex(i);
-		groupArray.push(window);
-	}
-};
 
 var EquipCommandMode = {
 	TOP: 0
@@ -1108,5 +1115,3 @@ StockItemTradeScreen._moveExtract = function() {
 	
 	return MoveResult.CONTINUE;
 };
-
-})()
