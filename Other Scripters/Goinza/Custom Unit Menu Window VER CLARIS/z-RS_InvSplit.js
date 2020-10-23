@@ -28,7 +28,7 @@ var RSWeaponWindow = defineObject(ItemListWindow,
 	
 	setDefaultItemFormation: function() {
 		var max = 7;
-		var count = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+		var count = DataConfig.getMaxUnitItemCount()
 		
 		if (count > max) {
 			count = max;
@@ -53,7 +53,7 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 		
 	setUnitMaxItemFormation: function(unit) {
 		var i;
-		var maxCount = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+		var maxCount = DataConfig.getMaxUnitItemCount()
 		
 		this._unit = unit;
 		
@@ -72,7 +72,7 @@ var WepListScrollbar = defineObject(ItemListScrollbar,
 	
 	setUnitItemFormation: function(unit) {
 		var i, item;
-		var maxCount = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+		var maxCount = DataConfig.getMaxUnitItemCount()
 		
 		this._unit = unit;
 		
@@ -159,7 +159,7 @@ var ItemOnlyWindow = defineObject(ItemListWindow,
 	
 	setDefaultItemFormation: function() {
 		var max = 7;
-		var count = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+		var count = DataConfig.getMaxUnitItemCount()
 		
 		if (count > max) {
 			count = max;
@@ -320,7 +320,7 @@ var ItemOnlyScrollbar = defineObject(ItemListScrollbar,
 
 UnitCommand.Item.isCommandDisplayable = function() {
 	var i = 0;
-	var max = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+	var max = DataConfig.getMaxUnitItemCount()
 	var found = false;
 	var item;
 	var unit = this.getCommandTarget()
@@ -724,7 +724,7 @@ var WeaponSelectMenuRS = defineObject(WeaponSelectMenu,
 
 UnitItemControl.getPossessionItemOnly = function(unit) {
 	var i;
-	var count = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+	var count = DataConfig.getMaxUnitItemCount()
 	var bringCount = 0;
 	
 	for (i = 0; i < count; i++) {
@@ -738,7 +738,7 @@ UnitItemControl.getPossessionItemOnly = function(unit) {
 
 UnitItemControl.getPossessionWeaponOnly = function(unit) {
 	var i;
-	var count = Math.ceil(DataConfig.getMaxUnitItemCount()/2)
+	var count = DataConfig.getMaxUnitItemCount()
 	var bringCount = 0;
 	
 	for (i = 0; i < count; i++) {
