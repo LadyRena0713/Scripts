@@ -13,9 +13,12 @@ The effects are as follows:
 -- equipped weapon will unequip it, acting as if the unit has no weapons!
 3. Most importantly, splits Items & Weapons between two equal-size inventories.
 
-
+Modified by Eclogia:
+ItemWorkWindow.setItemWorkData
+UnitItemTradeScreen._exchangeItem
 
 */
+
 var GradCol1 = 0xF9A600 //Set a hex code after 0x.
 var GradCol2 = 0xF9FF00 //Set a hex code after 0x.
 var GradVer1 = GradientType.RADIAL //Or set GradientType.LINEAR
@@ -728,7 +731,7 @@ UnitItemControl.getPossessionItemOnly = function(unit) {
 	var bringCount = 0;
 	
 	for (i = 0; i < count; i++) {
-		if (unit.getItem(i) !== null && !unit.getItem(i).isWeapon()) {
+		if (unit.getItem(i) != null && !unit.getItem(i).isWeapon()) {
 			bringCount++;
 		}
 	}
@@ -742,7 +745,7 @@ UnitItemControl.getPossessionWeaponOnly = function(unit) {
 	var bringCount = 0;
 	
 	for (i = 0; i < count; i++) {
-		if (unit.getItem(i) !== null && unit.getItem(i).isWeapon()) {
+		if (unit.getItem(i) != null && unit.getItem(i).isWeapon()) {
 			bringCount++;
 		}
 	}
@@ -751,6 +754,7 @@ UnitItemControl.getPossessionWeaponOnly = function(unit) {
 };
 
 UnitItemControl.isItemOnlySpace = function(unit) {
+	root.log('hi')
 	return this.getPossessionItemOnly(unit) < Math.ceil(DataConfig.getMaxUnitItemCount()/2)
 };
 
@@ -976,7 +980,7 @@ UnitItemFull._moveStockQuestion = function() {
 	if (this._questionWindow.moveWindow() !== MoveResult.CONTINUE) {
 		if (this._questionWindow.getQuestionAnswer() === QuestionAnswer.YES) {
 			if (this._targetItem.custom.EquippedRS){
-				this._targetItem.custom.EquippedRS = false
+				this._targetItem.custom.EquippedRS = false;
 			}
 			// Send the obtained item to the stock.
 			StockItemControl.pushStockItem(this._targetItem);
@@ -1007,6 +1011,16 @@ StockItemTradeScreen._storeItem = function() {
 	this._updateListWindow();
 };
 
+var setItemWorkDataAlias = ItemWorkWindow.setItemWorkData;
+ItemWorkWindow.setItemWorkData = function(item) {
+	setItemWorkDataAlias.call(this, item);
+	if (item.isWeapon()) {
+		arr = [StringTable.ItemWork_Equipment, StringTable.ItemWork_Discard];
+		this._scrollbar.setObjectArray(arr);
+	}
+}
+
+var exchangeItemAlias = UnitItemTradeScreen._exchangeItem;
 UnitItemTradeScreen._exchangeItem = function() {
 	var unitSrc = this._getTargetUnit(this._isSrcSelect);
 	var unitDest = this._getTargetUnit(this._isSrcScrollbarActive);
@@ -1015,40 +1029,40 @@ UnitItemTradeScreen._exchangeItem = function() {
 	var itemSrc = unitSrc.getItem(srcIndex);
 	var itemDest = unitDest.getItem(destIndex);
 	if (srcIndex === 0){
-		if (itemDest.isWeapon()){
+		if (itemDest !== null && itemDest.isWeapon()){
 			if (!ItemControl.isWeaponAvailable(unitSrc, itemDest)){
-				itemDest.custom.EquippedRS = false
+				itemDest.custom.EquippedRS = false;
 			}
 			else{
-				itemDest.custom.EquippedRS = true
+				itemDest.custom.EquippedRS = true;
 			}
 		}
 	}
 	else{
-		if (itemDest.isWeapon()){
-			itemDest.custom.EquippedRS = false
+		if (itemDest !== null && itemDest.isWeapon()){
+			itemDest.custom.EquippedRS = false;
 		}
 	}
 	if (destIndex === 0){
-		if (itemSrc.isWeapon()){
+		if (itemSrc !== null && itemSrc.isWeapon()){
 			if (!ItemControl.isWeaponAvailable(unitDest, itemSrc)){
-				itemSrc.custom.EquippedRS = false
+				itemSrc.custom.EquippedRS = false;
 			}
 			else{
-				itemSrc.custom.EquippedRS = true
+				itemSrc.custom.EquippedRS = true;
 			}
 		}
 	}
 	else{
-		if (itemSrc.isWeapon()){
-			itemSrc.custom.EquippedRS = false
+		if (itemSrc !== null && itemSrc.isWeapon()){
+			itemSrc.custom.EquippedRS = false;
 		}
 	}
-	UnitItemControl.setItem(unitSrc, srcIndex, itemDest);
-	UnitItemControl.setItem(unitDest, destIndex, itemSrc);
-	UnitItemControl.arrangeItem(unitSrc);
-	UnitItemControl.arrangeItem(unitDest);
+	exchangeItemAlias.call(this);
 };
+
+var setEquippedRSCustomParam = function(srcIndex, destIndex, itemSrc, itemDest) {
+}
 
 StockItemTradeScreen.isExtractAllowed = function() {
 	// No stock item exists, no more items can be withdrawn.
@@ -1082,11 +1096,11 @@ StockItemTradeScreen._moveExtract = function() {
 	var input = this._stockItemWindow.moveWindow();
 	
 	if (input === ScrollbarInput.SELECT) {	
-		var check = this._itemInfoWindow.getInfoItem()
-		if (check.isWeapon() && !UnitItemControl.isUnitWeaponOnlySpace(this._unit)){
+		var check = this._stockItemWindow.getCurrentItem()
+		if (check != null && check.isWeapon() && !UnitItemControl.isUnitWeaponOnlySpace(this._unit)){
 			MediaControl.soundDirect('operationblock');
 		}
-		else if (!check.isWeapon() && !UnitItemControl.isUnitItemOnlySpace(this._unit)){
+		else if (check != null && !check.isWeapon() && !UnitItemControl.isUnitItemOnlySpace(this._unit)){
 			MediaControl.soundDirect('operationblock');
 		}
 		else{
