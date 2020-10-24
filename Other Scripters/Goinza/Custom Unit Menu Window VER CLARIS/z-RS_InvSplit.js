@@ -754,7 +754,6 @@ UnitItemControl.getPossessionWeaponOnly = function(unit) {
 };
 
 UnitItemControl.isItemOnlySpace = function(unit) {
-	root.log('hi')
 	return this.getPossessionItemOnly(unit) < Math.ceil(DataConfig.getMaxUnitItemCount()/2)
 };
 
@@ -1028,14 +1027,12 @@ UnitItemTradeScreen._exchangeItem = function() {
 	var destIndex = this._getTargetIndex();
 	var itemSrc = unitSrc.getItem(srcIndex);
 	var itemDest = unitDest.getItem(destIndex);
-	if (srcIndex === 0){
-		if (itemDest !== null && itemDest.isWeapon()){
-			if (!ItemControl.isWeaponAvailable(unitSrc, itemDest)){
-				itemDest.custom.EquippedRS = false;
-			}
-			else{
-				itemDest.custom.EquippedRS = true;
-			}
+	if (itemDest != null && itemDest === ItemControl.getEquippedWeapon(unitDest)){
+		if (!ItemControl.isWeaponAvailable(unitSrc, itemDest)){
+			itemDest.custom.EquippedRS = false;
+		}
+		else{
+			itemDest.custom.EquippedRS = true;
 		}
 	}
 	else{
@@ -1043,14 +1040,12 @@ UnitItemTradeScreen._exchangeItem = function() {
 			itemDest.custom.EquippedRS = false;
 		}
 	}
-	if (destIndex === 0){
-		if (itemSrc !== null && itemSrc.isWeapon()){
-			if (!ItemControl.isWeaponAvailable(unitDest, itemSrc)){
-				itemSrc.custom.EquippedRS = false;
-			}
-			else{
-				itemSrc.custom.EquippedRS = true;
-			}
+	if (itemSrc != null && itemSrc === ItemControl.getEquippedWeapon(unitSrc)){
+		if (!ItemControl.isWeaponAvailable(unitDest, itemSrc)){
+			itemSrc.custom.EquippedRS = false;
+		}
+		else{
+			itemSrc.custom.EquippedRS = true;
 		}
 	}
 	else{
@@ -1059,6 +1054,51 @@ UnitItemTradeScreen._exchangeItem = function() {
 		}
 	}
 	exchangeItemAlias.call(this);
+};
+
+var tradeSelectAlias = UnitItemTradeScreen._moveTradeSelect;
+UnitItemTradeScreen._moveTradeSelect = function() {
+	// Check if the selection key was pressed in a state of selecting the item.
+	if (this._isSelect) {
+		if (!this._isTradable()) {
+			this._playWarningSound();
+			return MoveResult.CONTINUE;
+		}
+		
+		// Swap the item.
+		this._exchangeItem();
+		
+		// Update the window due to swap.
+		this._updateListWindow();
+
+		// Deactivate the selection state.
+		this._selectCancel();
+		
+		// Update by changing the item.
+		ItemControl.updatePossessionItem(this._unitSrc);
+		ItemControl.updatePossessionItem(this._unitDest);
+		
+	}
+	else {
+		// Save the position to select.
+		this._selectIndex = this._getTargetIndex();
+		
+		// Save if the selection was done at trade source or trade destination.
+		this._isSrcSelect = this._isSrcScrollbarActive;
+		
+		// Set as a selection state.
+		this._isSelect = true;
+		
+		// By calling setForceSelect, always display the cursor at the selected position.
+		if (this._isSrcSelect) {
+			this._itemListSrc.setForceSelect(this._selectIndex);
+		}
+		else {
+			this._itemListDest.setForceSelect(this._selectIndex);
+		}
+	}
+	
+	return MoveResult.CONTINUE;
 };
 
 var setEquippedRSCustomParam = function(srcIndex, destIndex, itemSrc, itemDest) {
@@ -1128,4 +1168,46 @@ StockItemTradeScreen._moveExtract = function() {
 	}
 	
 	return MoveResult.CONTINUE;
-};
+}
+	
+var CheckTradeCL0 = UnitItemTradeScreen._isTradable;
+UnitItemTradeScreen._isTradable = function() {
+	var result = CheckTradeCL0.call(this);
+	var srcItem = this._getSelectedItem(this._itemListSrc)
+	var destItem = this._getSelectedItem(this._itemListDest)
+	var unitSrc = this._getTargetUnit(this._isSrcSelect);
+	var unitDest = this._getTargetUnit(this._isSrcScrollbarActive);
+	if (srcItem == null && destItem != null){
+		if (!UnitItemControl.isWeaponOnlySpace(unitDest) && destItem.isWeapon()){
+			return false;
+		}
+		else if (!UnitItemControl.isItemOnlySpace(unitDest) && !destItem.isWeapon()){
+			return false;
+		}
+	}
+	if (srcItem != null && destItem == null){
+		if (!UnitItemControl.isWeaponOnlySpace(unitDest) && srcItem.isWeapon()){
+			return false;
+		}
+		else if (!UnitItemControl.isItemOnlySpace(unitDest) && !srcItem.isWeapon()){
+			return false;
+		}
+	}
+	if (!this._isSameTypeOrEmpty(srcItem, destItem)){
+		return false;
+	}
+	return result;
+}
+
+UnitItemTradeScreen._isSameTypeOrEmpty = function(srcItem, destItem){
+	if (srcItem == null || destItem == null){
+		return true;
+	}
+	if (srcItem.isWeapon() && destItem.isWeapon()){
+		return true;
+	}
+	if (!srcItem.isWeapon() && !destItem.isWeapon()){
+		return true;
+	}
+	return false;
+}
