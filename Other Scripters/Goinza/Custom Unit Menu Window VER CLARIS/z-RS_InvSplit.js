@@ -1211,3 +1211,41 @@ UnitItemTradeScreen._isSameTypeOrEmpty = function(srcItem, destItem){
 	}
 	return false;
 }
+var SortControl = defineObject(BaseObject,
+{
+	sortAll: function(){
+		var groupArray = [];
+		groupArray.push(PlayerList.getAliveList());
+		groupArray.push(EnemyList.getAliveList());
+		groupArray.push(AllyList.getAliveList());
+
+		var list, unit;
+		for (var h=0; h<groupArray.length; h++) {
+			list = groupArray[h];
+			for (var i=0; i<list.getCount(); i++) {
+				unit = list.getData(i);           
+				UnitItemControl.sortItems(unit);
+			}
+		}
+	}
+})
+//sort the items so that weapons are always on top.
+UnitItemControl.sortItems = function(unit){
+	var itemArray = []
+	for (var i = 0; i < this.getPossessionItemCount(unit); ++i){
+		for (var j = 0; j < this.getPossessionItemCount(unit); ++j){
+			if (unit.getItem(i).isWeapon() && !unit.getItem(j).isWeapon()){
+				var item1 = unit.getItem(i)
+				var item2 = unit.getItem(j)
+				unit.setItem(j, item1)
+				unit.setItem(i, item2)
+			}
+		}
+	}
+}
+
+var PrepMapCL999 = CurrentMap.prepareMap;
+CurrentMap.prepareMap = function(){
+	PrepMapCL999.call(this)
+	SortControl.sortAll()
+}
