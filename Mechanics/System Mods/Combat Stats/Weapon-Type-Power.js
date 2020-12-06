@@ -6,27 +6,29 @@ To use, assign custom parameters to the weapon or weapon type as
 seen below, and remember that weapon formula trumps weapon type
 formula:
 
-{FormulaCL:
 {
-	Stats:[1,3],
-	Percents:[0.5,0.5]
+	FormulaCL:
+	{
+		Stats:[1,3],
+		Percents:[0.5,0.5]
+	}
 }
-}
+
 The stats are an array of Parameter IDs. The Percents are decimal
 represented amounts of the stat in question. In the example above,
 I am using 50% Strength and 50% Skill. The IDs are below:
 
-Max HP: 0
-Strength: 1
-Magic: 2
-Skill: 3
-Speed: 4
-Luck: 5
-Defense: 6
-Resistance: 7
-Movement: 8
-Weapon Level: 9
-Build: 10
+Max HP: 		0
+Strength: 		1
+Magic: 			2
+Skill: 			3
+Speed: 			4
+Luck: 		  	5
+Defense: 		6
+Resistance:		7
+Movement: 		8
+Weapon Level:	9
+Build: 			10
 
 Presumably if you assign a new parameter with a custom ID through a
 script, it would work with this plugin. But I can't guarantee that.
