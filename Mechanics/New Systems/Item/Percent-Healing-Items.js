@@ -196,29 +196,11 @@ var PercentItemAI = defineObject(BaseItemAI,
 		var baseHp;
 		var maxHp = ParamBonus.getMhp(combination.targetUnit);
 		var currentHp = combination.targetUnit.getHp();
-		
 		if (currentHp === maxHp) {
 			return AIValue.MIN_SCORE;
 		}
-		
 		// The unit who terribly reduced HP is prioritized.
-		
-		baseHp = Math.floor(maxHp * 0.25);
-		if (currentHp < baseHp) {
-			return 50;
-		}
-		
-		baseHp = Math.floor(maxHp * 0.5);
-		if (currentHp < baseHp) {
-			return 30;
-		}
-		
-		baseHp = Math.floor(maxHp * 0.75);
-		if (currentHp < baseHp) {
-			return 10;
-		}
-		
-		return AIValue.MIN_SCORE;
+		return 50-Math.floor(100*(currentHp/maxHp))
 	}
 }
 );

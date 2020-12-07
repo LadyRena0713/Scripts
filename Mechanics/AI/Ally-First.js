@@ -1,9 +1,7 @@
 TurnChangeEnd._startNextTurn = function() {
 	var nextTurnType;
 	var turnType = root.getCurrentSession().getTurnType();
-	
 	this._checkActorList();
-	
 	if (turnType === TurnType.PLAYER) {
 		// If a number of the enemy is 0 at this moment, it is also possible that the enemy turn is not executed.
 		// However, in this case, the enemy turn related cannot be detected with an event condition,
@@ -18,6 +16,5 @@ TurnChangeEnd._startNextTurn = function() {
 	else {
 		nextTurnType = TurnType.PLAYER;
 	}
-	
 	root.getCurrentSession().setTurnType(nextTurnType);
 };

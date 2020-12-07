@@ -1,7 +1,6 @@
 ReinforcementChecker._setMapScroll = function() {
 	var session = root.getCurrentSession();
 	var Unit = PlayerList.getSortieList().getData(0)
-	
 	if (this._xScroll <= 0){
 		root.log("X Scroll adjusted.")
 		this._xScroll === Unit.getMapX();

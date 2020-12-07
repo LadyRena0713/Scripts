@@ -7,57 +7,47 @@ The initial name should always be the displayed name of hte stat on the Unit Men
 This Parameter can be applied to either the Unit or the Class, so you can make it sweeping or specific as you see fit.
 Thanks for using my plugins, and contact me if you have any issues! -LadyRena
 */
-
+var CPNCL0 = UnitStatusScrollbar._createStatusEntry;
 UnitStatusScrollbar._createStatusEntry = function(unit, index, weapon) {
-	var statusEntry = StructureBuilder.buildStatusEntry();
+	var statusEntry = CPNCL0.call(this, unit, index, weapon);
 	var i, j;
-	statusEntry.type = ParamGroup.getParameterName(index);
+	var tempName = ParamGroup.getParameterName(index);
 	if (typeof unit.getClass().custom.CustParamName === 'object'){
 		for (i = 0; i < unit.getClass().custom.CustParamName.length; i++){
-			if (statusEntry.type === unit.getClass().custom.CustParamName[i][0] && typeof unit.getClass().custom.CustParamName[i][1] === 'string'){
-				statusEntry.type = unit.getClass().custom.CustParamName[i][1];
+			if (tempName === unit.getClass().custom.CustParamName[i][0] && typeof unit.getClass().custom.CustParamName[i][1] === 'string'){
+				tempName = unit.getClass().custom.CustParamName[i][1];
 			}
 		}
 	}
 	if (typeof unit.custom.CustParamName === 'object'){
 		for (j = 0; j < unit.custom.CustParamName.length; j++){
-			if (statusEntry.type === unit.custom.CustParamName[j][0] && typeof unit.custom.CustParamName[j][1] === 'string'){
-				statusEntry.type = unit.custom.CustParamName[j][1];
+			if (tempName === unit.custom.CustParamName[j][0] && typeof unit.custom.CustParamName[j][1] === 'string'){
+				tempName = unit.custom.CustParamName[j][1];
 			}
 		}
 	}
-	// Include items or state bonuses by calling the ParamGroup.getLastValue, not the ParamGroup.getClassUnitValue.
-	statusEntry.param = ParamGroup.getLastValue(unit, index, weapon);
-	statusEntry.bonus = 0;
-	statusEntry.index = index;
-	statusEntry.isRenderable = ParamGroup.isParameterRenderable(index);
-	
+	statusEntry.type = tempName;
 	return statusEntry;
 };
-
+var CPNCL1 = StatusScrollbar._createStatusEntry;
 StatusScrollbar._createStatusEntry = function(unit, index, weapon) {
-	var statusEntry = StructureBuilder.buildStatusEntry();
+	var statusEntry = CPNCL1.call(this, unit, index, weapon);
 	var i, j;
-	statusEntry.type = ParamGroup.getParameterName(index);
+	var tempName = ParamGroup.getParameterName(index);
 	if (typeof unit.getClass().custom.CustParamName === 'object'){
 		for (i = 0; i < unit.getClass().custom.CustParamName.length; i++){
-			if (statusEntry.type === unit.getClass().custom.CustParamName[i][0] && typeof unit.getClass().custom.CustParamName[i][1] === 'string'){
-				statusEntry.type = unit.getClass().custom.CustParamName[i][1];
+			if (tempName === unit.getClass().custom.CustParamName[i][0] && typeof unit.getClass().custom.CustParamName[i][1] === 'string'){
+				tempName = unit.getClass().custom.CustParamName[i][1];
 			}
 		}
 	}
 	if (typeof unit.custom.CustParamName === 'object'){
 		for (j = 0; j < unit.custom.CustParamName.length; j++){
-			if (statusEntry.type === unit.custom.CustParamName[j][0] && typeof unit.custom.CustParamName[j][1] === 'string'){
-				statusEntry.type = unit.custom.CustParamName[j][1];
+			if (tempName === unit.custom.CustParamName[j][0] && typeof unit.custom.CustParamName[j][1] === 'string'){
+				tempName = unit.custom.CustParamName[j][1];
 			}
 		}
 	}
-	statusEntry.param = ParamGroup.getClassUnitValue(unit, index);
-	statusEntry.bonus = 0;
-	statusEntry.index = index;
-	statusEntry.isRenderable = ParamGroup.isParameterRenderable(index);
-	
-	
+	statusEntry.type = tempName;
 	return statusEntry;
 };
