@@ -10,6 +10,9 @@ var RogueStealth = AIScorer.Weapon.getScore;
 AIScorer.Weapon.getScore = function(unit, combination){
 	var score = RogueStealth.call(this, unit, combination)
 	var target = combination.targetUnit;
+	if (target == null){
+		return score;
+	}
 	var skill = SkillControl.getPossessionCustomSkill(target,"Stealthy")
 	if (skill){
 		score = Math.ceil(score*0.25)
