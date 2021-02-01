@@ -1,7 +1,7 @@
 (function() {
 var LD1 = SkillRandomizer.isCustomSkillInvokedInternal;
 SkillRandomizer.isCustomSkillInvokedInternal = function(active, passive, skill, keyword) {
-	if (keyword === 'LifeDeath') {
+	if (keyword === 'Risk-Stance') {
 		return this._isSkillInvokedInternal(active, passive, skill);
 	}
 	return LD1.call(this, active, passive, skill, keyword);
@@ -10,9 +10,9 @@ SkillRandomizer.isCustomSkillInvokedInternal = function(active, passive, skill, 
 var LD2 = DamageCalculator.calculateAttackPower;
 DamageCalculator.calculateAttackPower = function(active, passive, weapon, isCritical, totalStatus, trueHitValue) {
 	var pow = LD2.call(this,active,passive,weapon,isCritical,totalStatus,trueHitValue);
-	
-	if (SkillControl.getPossessionCustomSkill(active, 'Risk-Stance') || SkillControl.getPossessionCustomSkill(passive, 'Risk-Stance')){
-		pow += 10;
+	var skill = SkillControl.getPossessionCustomSkill(active, 'Risk-Stance') || SkillControl.getPossessionCustomSkill(passive, 'Risk-Stance')	
+	if (skill){
+		pow += skill.custom.BoostCL;
 	}
 	
 	return pow;
