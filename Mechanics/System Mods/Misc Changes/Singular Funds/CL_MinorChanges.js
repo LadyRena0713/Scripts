@@ -11,3 +11,8 @@ ShopLayoutScreen.getGold = function(){
 ObjectiveWindow._configureObjectiveParts = function(groupArray) {
 	groupArray.appendObject(ObjectiveParts.Turn);
 };
+
+ShopLayoutScreen.setGold = function(gold) {
+	//adjust unit gold when shopping
+	this._targetUnit.custom.UserGoldCL = gold
+};
