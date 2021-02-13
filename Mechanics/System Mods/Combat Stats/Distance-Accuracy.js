@@ -1,7 +1,13 @@
 var DA01 = HitCalculator.calculateSingleHit;
 HitCalculator.calculateSingleHit = function(active, passive, weapon, totalStatus) {
 	var ACC = DA01.call(this,active,passive,weapon,totalStatus);
-	var Reduction = root.getMetaSession().global.hitloss != null ? root.getMetaSession().global.hitloss : 5
+	var Reduction = root.getMetaSession().global.hitloss != null ? root.getMetaSession().global.hitloss : 10
+	if (SkillControl.getPossessionCustomSkill(active,"TrueshotCL") != null){
+		return ACC;
+	}
+	if (weapon.custom.TrueshotCL){
+		return ACC;
+	}
 	var x, y, x2, y2, FinX, FinY, Final;
 	x = active.getMapX();
 	y = active.getMapY();
